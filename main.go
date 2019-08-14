@@ -32,9 +32,10 @@ var (
 	}
 )
 
-func hashFunc(target string, prefix []byte, suffix []byte, result chan<- string, length int, id int) {
+func hashFunc(target string, prefix []byte, suffix []byte, result chan<- string, id int) {
 	var msg []byte
 	var src []byte
+	length := len(target)
 	fn := genStrFunc(length, id)
 
 	for {
@@ -106,15 +107,19 @@ func banner() {
 		"proof algorithm target [prefix] [suffix]\n")
 }
 
-func brute(target string, prefix []byte, suffix []byte, length int) chan string {
+func brute(target string, prefix []byte, suffix []byte) chan string {
 	result := make(chan string)
 	for i := 0; i < coreNum; i++ {
-		go hashFunc(target, prefix, suffix, result, length, i)
+		go hashFunc(target, prefix, suffix, result, i)
 	}
 	return result
 }
 
 func main() {
+	if coreNum < 1 {
+		coreNum = 1
+	}
+
 	target, prefix, suffix, err := parseCmd()
 	if err != nil {
 		banner()
@@ -122,6 +127,6 @@ func main() {
 		return
 	}
 
-	result := brute(target, []byte(prefix), []byte(suffix), len(target))
+	result := brute(target, []byte(prefix), []byte(suffix))
 	fmt.Println(<-result)
 }
